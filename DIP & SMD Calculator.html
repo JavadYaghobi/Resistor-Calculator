@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Resistor Bench – DIP & SMD Calculator</title>
+<style>
+:root{--bg:#10151a;--pn:#182028;--ln:#2a3640;--tx:#e4e9ed;--mu:#8b99a6;--ac:#4cc9c0;--ok:#5bd18b;--er:#ff7b72;--in:#0d1217;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme=light]{--bg:#eef1f3;--pn:#fff;--ln:#cfd7dd;--tx:#18222b;--mu:#5b6b78;--ac:#0b8f87;--ok:#1b8a4b;--er:#c93a31;--in:#f6f8f9;color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:1100px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+h1{font-size:20px;margin:0;letter-spacing:.2px}h1 small{display:block;font-size:13px;color:var(--mu);font-weight:400}
+h2{font-size:15px;margin:0 0 10px}
+.card{background:var(--pn);border:1px solid var(--ln);border-radius:8px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mu)}
+input,select,button{font:inherit;color:var(--tx);background:var(--in);border:1px solid var(--ln);border-radius:6px;padding:8px 10px;min-height:38px}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+button{cursor:pointer}button:hover{border-color:var(--ac)}
+#val{font:600 22px ui-monospace,Menlo,Consolas,monospace;width:240px;max-width:100%}
+.seg{display:inline-flex;border:1px solid var(--ln);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent;min-width:76px}
+.seg button[aria-pressed=true]{background:var(--ac);color:#06201e;font-weight:600}
+.err{color:var(--er);min-height:22px;font-size:13px;margin:6px 0}
+.main{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;margin-top:10px}
+@media(max-width:800px){.main{grid-template-columns:1fr}#val{width:100%}}
+.bench{background:repeating-linear-gradient(0deg,transparent 0 23px,rgba(127,150,170,.08) 23px 24px),repeating-linear-gradient(90deg,transparent 0 23px,rgba(127,150,170,.08) 23px 24px),var(--in);border:1px solid var(--ln);border-radius:6px;padding:8px;margin-bottom:8px}
+.bench svg{width:100%;height:auto;display:block}.cap{font-size:12px;color:var(--mu);margin:0 0 4px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0}
+.kv dt{color:var(--mu)}.kv dd{margin:0;font-family:ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.ok{color:var(--ok)}.no{color:var(--mu)}.mu{color:var(--mu)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--ln);padding:6px 8px;text-align:left;vertical-align:middle}
+th{color:var(--mu);font-weight:500}tr.hl td{background:rgba(76,201,192,.14)}
+.tw{overflow-x:auto}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid rgba(127,127,127,.6);margin:0 3px 0 6px;vertical-align:-1px}
+.pill{display:inline-block;border:1px solid var(--ln);border-radius:999px;padding:1px 9px;margin:2px 4px 2px 0;font-size:12px}
+.pill.y{border-color:var(--ok);color:var(--ok)}.pill.s{background:rgba(76,201,192,.18)}
+.best{font-size:11px;background:var(--ac);color:#06201e;border-radius:4px;padding:1px 6px;margin-left:6px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media(max-width:800px){.two{grid-template-columns:1fr}}
+details{margin-top:14px}summary{cursor:pointer;font-weight:600}
+.eia{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:2px 10px;font:12px ui-monospace,monospace;margin-top:8px}
+footer{margin:18px 0 6px;font-size:13px;color:var(--mu)}
+.sm{min-height:30px;padding:2px 8px;font-size:12px}
+</style></head><body><div class="w">
+<header><h1>Resistor Bench<small>DIP colour code, SMD markings, EIA-96 and E-series, calculated exactly</small></h1>
+<button id="theme" aria-label="Toggle theme">Light / Dark</button></header>
+
+<section class="card"><div class="row">
+<label>Resistance<input id="val" autocomplete="off" inputmode="text" placeholder="2.2k, 4R7, 470…" maxlength="24"></label>
+<label>Unit (if none typed)<select id="unit"><option value="1">Ω</option><option value="1000">kΩ</option><option value="1000000">MΩ</option></select></label>
+<button id="reset">Reset</button><button id="cpv">Copy value</button><button id="cpc">Copy code</button><button id="swap">Swap DIP ⇄ SMD</button>
+</div>
+<div class="row" style="margin-top:12px">
+<div class="seg" role="group" aria-label="Mode"><button data-m="dip" aria-pressed="false">DIP</button><button data-m="smd" aria-pressed="false">SMD</button><button data-m="auto" aria-pressed="true">AUTO</button></div>
+<label>DIP bands<select id="bands"><option>4</option><option>5</option><option>6</option></select></label>
+<label>Tolerance<select id="tol"></select></label>
+<label>Temp. coeff. (6-band)<select id="tc"></select></label>
+<label>SMD system<select id="smds"><option value="best">Best match</option><option value="s3">3-digit</option><option value="s4">4-digit</option><option value="r">R-notation</option><option value="eia">EIA-96</option></select></label>
+<label>E-series<select id="ser"></select></label>
+<label>DIP power rating<select id="pw"></select></label>
+<label>SMD package<select id="pk"></select></label>
+</div><div class="err" id="err" role="alert"></div></section>
+
+<div class="main"><section class="card"><h2>Component</h2><div id="vis"></div></section>
+<section class="card"><h2>Technical information</h2><div id="info"></div></section></div>
+
+<section class="card" style="margin-top:14px"><h2>All representations</h2><div class="tw" id="mat"></div></section>
+
+<div class="two">
+<section class="card"><h2>Decode colour bands</h2><div class="row"><label style="flex:1">Colours, in order<input id="dcol" placeholder="red red red gold" style="width:100%"></label><button id="dd1">Decode</button></div><div id="r1" style="margin-top:8px"></div></section>
+<section class="card"><h2>Decode SMD marking</h2><div class="row"><label style="flex:1">Marking<input id="dsm" placeholder="222, 2201, 4R7, 01B" style="width:100%" maxlength="6"></label><button id="dd2">Decode</button></div><div id="r2" style="margin-top:8px"></div></section></div>
+
+<details class="card"><summary>Reference: colour code</summary><div class="tw"><table id="ct"></table></div></details>
+<details class="card"><summary>Reference: EIA-96 table and multipliers</summary><p class="mu">Multiplier letters: Z ×0.001 · Y/R ×0.01 · X/S ×0.1 · A ×1 · B/H ×10 · C ×100 · D ×1000 · E ×10000 · F ×100000. Marking = two-digit code + letter (e.g. 01B = 100 × 10 = 1 kΩ).</p><div class="eia" id="et"></div></details>
+<details class="card"><summary>Reference: how each marking is built</summary><div class="mu">
+<p>3-digit: two significant digits + multiplier digit (0–6), e.g. 472 = 47 × 10² = 4.7 kΩ. Values below 10 Ω cannot be written this way.</p>
+<p>4-digit: three significant digits + multiplier digit (1002 = 100 × 10² = 10 kΩ). Below 100 Ω, R marks the decimal point (10R0, 4R70).</p>
+<p>R-notation: R is the decimal point, up to four characters (R100 = 0.1 Ω, 2R2 = 2.2 Ω, 22R0 = 22 Ω).</p>
+<p>E-series are preferred values (E6/E12/E24: two significant digits; E48/E96/E192: three). They say which values are manufactured, not how a part is marked.</p></div></details>
+<footer id="tests"></footer></div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+/* ---------- constants ---------- */
+const N=['black','brown','red','orange','yellow','green','blue','violet','grey','white','gold','silver'];
+const H=['#1b1b1d','#7a431c','#d92b2b','#f2800d','#f6d02f','#2f9e49','#2160d6','#7a3fd1','#8e9196','#f3f3ee','#d4a72c','#c3c6cc'];
+const ML=['×1','×10','×100','×1k','×10k','×100k','×1M','×10M','×100M','×1G','×0.1','×0.01'];
+const TOL={brown:100,red:200,green:50,blue:25,violet:10,grey:5,gold:500,silver:1000}; /* hundredths of a percent */
+const TC={black:250,brown:100,red:50,orange:15,yellow:25,green:20,blue:10,violet:5,grey:1}; /* ppm/K */
+const E96=('100 102 105 107 110 113 115 118 121 124 127 130 133 137 140 143 147 150 154 158 162 165 169 174 178 182 187 191 196 200 205 210 215 221 226 232 237 243 249 255 261 267 274 280 287 294 301 309 316 324 332 340 348 357 365 374 383 392 402 412 422 432 442 453 464 475 487 499 511 523 536 549 562 576 590 604 619 634 649 665 681 698 715 732 750 768 787 806 825 845 866 887 909 931 953 976').split(' ');
+const SER={E6:'100 150 220 330 470 680'.split(' '),
+E12:'100 120 150 180 220 270 330 390 470 560 680 820'.split(' '),
+E24:'100 110 120 130 150 160 180 200 220 240 270 300 330 360 390 430 470 510 560 620 680 750 820 910'.split(' '),
+E48:E96.filter((_,i)=>i%2===0),E96,
+E192:('100 101 102 104 105 106 107 109 110 111 113 114 115 117 118 120 121 123 124 126 127 129 130 132 133 135 137 138 140 142 143 145 147 149 150 152 154 156 158 160 162 164 165 167 169 172 174 176 178 180 182 184 187 189 191 193 196 198 200 203 205 208 210 213 215 218 221 223 226 229 232 234 237 240 243 246 249 252 255 258 261 264 267 271 274 277 280 284 287 291 294 298 301 305 309 312 316 320 324 328 332 336 340 344 348 352 357 361 365 370 374 379 383 388 392 397 402 407 412 417 422 427 432 437 442 448 453 459 464 470 475 481 487 493 499 505 511 517 523 530 536 542 549 556 562 569 576 583 590 597 604 612 619 626 634 642 649 657 665 673 681 690 698 706 715 723 732 741 750 759 768 777 787 796 806 816 825 835 845 856 866 876 887 898 909 920 931 942 953 965 976 988').split(' ')};
+const EL={'-3':'Z','-2':'Y','-1':'X','0':'A','1':'B','2':'C','3':'D','4':'E','5':'F'};
+const EX={Z:-3,Y:-2,R:-2,X:-1,S:-1,A:0,B:1,H:1,C:2,D:3,E:4,F:5};
+const SMDN={s3:'3-digit',s4:'4-digit',r:'R-notation',eia:'EIA-96'};
+
+/* ---------- exact decimal core: resistance = BigInt micro-ohms ---------- */
+const P10=n=>10n**BigInt(n);
+function dec(i,f,exp){const n=BigInt((i+f).replace(/^0+/,'')||'0'),p=6+exp-f.length;
+ if(p>=0)return n*P10(p);const q=P10(-p);return n%q===0n?n/q:null}
+function parseIn(t,u){
+ t=t.trim().replace(/\s+/g,'').replace(/,/g,'.').replace(/(ohms?|Ω|ω)$/i,'');
+ if(!t)return{err:'Enter a resistance value.'};
+ const m=t.match(/^(\d*)(?:\.(\d*))?([rRkKmMgG])?(\d*)$/);
+ if(!m||t.length>24)return{err:'Invalid value. Try 2.2, 4k7, 10k, 1M or 4.7MΩ.'};
+ let i=m[1],f=m[2]||'',L=m[3]||'',tail=m[4]||'';
+ if(tail&&f)return{err:'Use either a decimal point or a letter as the decimal separator, not both.'};
+ if(tail)f=tail;
+ if(!i&&!f)return{err:'Invalid value. Try 2.2, 4k7, 10k, 1M or 4.7MΩ.'};
+ const e=L?{r:0,k:3,m:6,g:9}[L.toLowerCase()]:Math.round(Math.log10(u));
+ const V=dec(i||'0',f,e);
+ if(V===null)return{err:'Too many decimal places. The finest supported resolution is 1 µΩ.'};
+ if(V===0n)return{err:'Resistance must be greater than zero.'};
+ return{V}}
+const sig=V=>{const s=V.toString(),t=s.replace(/0+$/,'');return{d:t,x:s.length-t.length-6}};
+const pad=(g,n)=>g.d.length>n?null:{d:g.d+'0'.repeat(n-g.d.length),x:g.x-(n-g.d.length)};
+function pretty(b,dp){if(b===0n)return'0 Ω';const s=b.toString(),t=s.replace(/0+$/,''),e=s.length-t.length-dp,m=e+t.length-1,
+ u=m>=9?9:m>=6?6:m>=3?3:0,il=m-u+1;let o;
+ if(il<=0)o='0.'+'0'.repeat(-il)+t;else if(il>=t.length)o=t+'0'.repeat(il-t.length);else o=t.slice(0,il)+'.'+t.slice(il);
+ return o+' '+{0:'Ω',3:'kΩ',6:'MΩ',9:'GΩ'}[u]}
+const plain=V=>{const s=V.toString().padStart(7,'0'),f=s.slice(-6).replace(/0+$/,'');return s.slice(0,-6)+(f?'.'+f:'')+' Ω'};
+
+/* ---------- engines: encode (V -> code|null) and decode (code -> V|null) ---------- */
+function dipBands(V,n,tol,tc){const p=pad(sig(V),n===4?2:3);if(!p||p.x<-2||p.x>9)return null;
+ const b=[...p.d].map(c=>N[c]);b.push(p.x>=0?N[p.x]:p.x===-1?'gold':'silver');b.push(tol);if(n===6)b.push(tc);return b}
+function dDIP(a){a=a.map(x=>x.toLowerCase().replace('gray','grey'));const L=a.length;
+ if(L<4||L>6)return{err:'Enter 4, 5 or 6 colours.'};
+ const nd=L===4?2:3,ds=a.slice(0,nd),mu=a[nd],tl=a[nd+1],tc=a[nd+2];
+ for(const c of ds)if(!(N.indexOf(c)>=0&&N.indexOf(c)<=9))return{err:`"${c}" cannot be a digit band.`};
+ const mi=N.indexOf(mu);if(mi<0)return{err:`Unknown colour "${mu}".`};
+ if(!Object.hasOwn(TOL,tl))return{err:`"${tl}" is not a tolerance colour.`};
+ if(L===6&&!Object.hasOwn(TC,tc))return{err:`"${tc}" is not a temperature-coefficient colour.`};
+ const n=BigInt(ds.map(c=>N.indexOf(c)).join(''));if(n===0n)return{err:'Value is zero.'};
+ return{V:n*P10(6+(mi<10?mi:mi===10?-1:-2)),tol:TOL[tl],tc:TC[tc]}}
+function encS3(V){const p=pad(sig(V),2);return !p||p.x<0||p.x>6?null:p.d+p.x}
+function dS3(s){const m=s.match(/^(\d\d)(\d)$/);if(!m||+m[2]>6||+m[1]===0)return null;return BigInt(m[1])*P10(6+ +m[2])}
+function encS4(V){const p=pad(sig(V),3);if(!p)return null;
+ if(p.x>=0&&p.x<=6)return p.d+p.x;
+ if(p.x>=-3&&p.x<=-1){const k=3+p.x;return p.d.slice(0,k)+'R'+p.d.slice(k)}return null}
+function dR(s){s=s.toUpperCase();const m=s.match(/^(\d*)R(\d*)$/);if(!m||s.length>4||!(m[1]+m[2]))return null;
+ const V=dec(m[1]||'0',m[2],0);return V&&V>0n?V:null}
+function dS4(s){if(/R/i.test(s))return s.length===4?dR(s):null;if(!/^\d{4}$/.test(s)||+s[3]>6||+s.slice(0,3)===0)return null;
+ return BigInt(s.slice(0,3))*P10(6+ +s[3])}
+function encR(V){const g=sig(V),d=g.d;
+ if(d.length+g.x<=0){const k=g.x+3;if(k<0||d.length+k>3)return null;return'R'+(d+'0'.repeat(k)).padStart(3,'0')}
+ let i,f;if(g.x>=0){i=d+'0'.repeat(g.x);f='0'}else{i=d.slice(0,d.length+g.x);f=d.slice(d.length+g.x)}
+ if(i.length>2||i.length+1+f.length>4)return null;return i+'R'+f}
+function encE(V){const p=pad(sig(V),3);if(!p)return null;const i=E96.indexOf(p.d),L=EL[p.x];
+ return i<0||!L?null:String(i+1).padStart(2,'0')+L}
+function dE(s){const m=s.toUpperCase().match(/^(\d\d)([ZYXABCDEFRSH])$/);if(!m||+m[1]<1||+m[1]>96)return null;
+ return BigInt(E96[+m[1]-1])*P10(6+EX[m[2]])}
+const ENC={s3:encS3,s4:encS4,r:encR,eia:encE},DEC={s3:dS3,s4:dS4,r:dR,eia:dE};
+const inSeries=(V,k)=>{const p=pad(sig(V),3);return !!p&&SER[k].includes(p.d)};
+function best(m,d){if(d.length<=2){if(m.s3)return's3';if(m.r)return'r'}if(m.eia)return'eia';return m.s4?'s4':m.s3?'s3':m.r?'r':null}
+
+/* ---------- visualisation ---------- */
+/* typical nominal dimensions in mm: DIP [body length, body diameter] by power; SMD [length, width] by package */
+const PW={'1/8 W':[3.2,1.6],'1/4 W':[6.3,2.3],'1/2 W':[9.0,3.2],'1 W':[11.5,4.5],'2 W':[15.0,5.5]};
+const PK={'0201':[0.6,0.3],'0402':[1.0,0.5],'0603':[1.6,0.8],'0805':[2.0,1.25],'1206':[3.2,1.6],'1210':[3.2,2.5],'1812':[4.5,3.2],'2010':[5.0,2.5],'2512':[6.3,3.2]};
+const mm=x=>x.toFixed(x%1&&Math.round(x*100)%10?2:1)+' mm';
+const TXT='font-size="12" fill="currentColor" font-family="ui-monospace,Menlo,Consolas,monospace"';
+const dimH=(a,b,y,t,y0,ly)=>`<g stroke="currentColor" stroke-width="1"><path d="M${a} ${y0}V${y+(y0>y?-5:5)}M${b} ${y0}V${y+(y0>y?-5:5)}" opacity=".6"/><path d="M${a} ${y}H${b}" marker-start="url(#ar)" marker-end="url(#ar)"/></g><text x="${(a+b)/2}" y="${ly}" text-anchor="middle" ${TXT}>${t}</text>`;
+const dimV=(x,a,b,t,x0,ty)=>`<g stroke="currentColor" stroke-width="1"><path d="M${x0} ${a}H${x+5}M${x0} ${b}H${x+5}" opacity=".6"/><path d="M${x} ${a}V${b}" marker-start="url(#ar)" marker-end="url(#ar)"/></g><text x="${x+10}" y="${ty}" ${TXT}>${t}</text>`;
+const ARW='<marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 0L8 4L0 8z" fill="currentColor"/></marker>';
+const BODY='M150 36C130 36 122 50 122 70S130 104 150 104L175 98H345L370 104C390 104 398 90 398 70S390 36 370 36L345 42H175Z';
+function dipSVG(b,w){let g='';const d=PW[w];
+ if(b){const v=b.length===4?3:4,xs=[...Array(v)].map((_,i)=>158+i*30);xs.push(b.length===6?318:336);if(b.length===6)xs.push(356);
+  g=b.map((c,i)=>`<rect x="${xs[i]}" y="26" width="17" height="88" fill="${H[N.indexOf(c)]}"/>`).join('')}
+ return`<svg viewBox="0 0 520 170" style="color:var(--mu)" role="img" aria-label="Axial resistor ${b?b.join(' '):'without bands'}"><defs>${ARW}
+<linearGradient id="ld" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef0f2"/><stop offset=".5" stop-color="#9aa1a9"/><stop offset="1" stop-color="#555b62"/></linearGradient>
+<linearGradient id="sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".25" stop-color="#fff" stop-opacity=".1"/><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></linearGradient>
+<clipPath id="bd"><path d="${BODY}"/></clipPath></defs>
+<ellipse cx="260" cy="124" rx="150" ry="6" fill="#000" opacity=".25"/>
+<rect x="6" y="66" width="140" height="8" rx="3" fill="url(#ld)"/><rect x="374" y="66" width="140" height="8" rx="3" fill="url(#ld)"/>
+<path d="${BODY}" fill="#d6bd8a"/><g clip-path="url(#bd)">${g}</g><path d="${BODY}" fill="url(#sh)"/>${d?dimH(122,398,140,'',108,156).replace('></text>','>L '+mm(d[0])+'</text>')+dimV(410,36,104,'',372,58).replace('></text>','>D '+mm(d[1])+'</text>'):''}</svg>`}
+function smdSVG(t,k){const d=PK[k],fs=t&&t.length>3?38:46;
+ return`<svg viewBox="0 0 420 170" style="color:var(--mu)" role="img" aria-label="SMD resistor marked ${t||'blank'}"><defs>${ARW}
+<linearGradient id="tm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1f2f4"/><stop offset=".5" stop-color="#b5bac1"/><stop offset="1" stop-color="#7a8088"/></linearGradient>
+<linearGradient id="bs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient></defs>
+<ellipse cx="180" cy="140" rx="135" ry="7" fill="#000" opacity=".3"/>
+<rect x="62" y="40" width="236" height="90" rx="4" fill="#17191c"/><rect x="62" y="40" width="236" height="90" rx="4" fill="url(#bs)"/>
+<rect x="62" y="40" width="46" height="90" rx="4" fill="url(#tm)"/><rect x="252" y="40" width="46" height="90" rx="4" fill="url(#tm)"/>
+<text x="180" y="${85+fs*.35}" text-anchor="middle" font-family="ui-monospace,Menlo,Consolas,monospace" font-weight="700" font-size="${fs}" fill="#e8e8e6" letter-spacing="3">${t||''}</text>${d?dimH(62,298,30,'',38,20).replace('></text>','>L '+mm(d[0])+'</text>')+dimV(330,40,130,'',298,89).replace('></text>','>W '+mm(d[1])+'</text>'):''}</svg>`}
+
+/* ---------- UI ---------- */
+let mode='auto',cur=null;
+const dot=c=>`<i class="dot" style="background:${H[N.indexOf(c)]}"></i>${c}`;
+const cpb=v=>v?` <button class="sm" data-cp="${v}">Copy</button>`:'';
+const tolTxt=t=>'±'+t/100+'%';
+function render(){
+ const r=parseIn($('#val').value,+$('#unit').value);
+ if(r.err){$('#err').textContent=$('#val').value.trim()?r.err:'';cur=null;
+  $('#vis').innerHTML=mode!=='smd'?`<div class="bench">${dipSVG(null)}</div>`:`<div class="bench">${smdSVG('')}</div>`;
+  $('#info').innerHTML='<p class="mu">Enter a value such as 2.2k, 4R7 or 470 to see its codes.</p>';$('#mat').innerHTML='';return}
+ $('#err').textContent='';
+ const V=r.V,n=+$('#bands').value,tol=$('#tol').value,tc=$('#tc').value,sg=sig(V);
+ const dip={4:dipBands(V,4,tol,tc),5:dipBands(V,5,tol,tc),6:dipBands(V,6,tol,tc)};
+ const sm={};for(const k in ENC)sm[k]=ENC[k](V);
+ const bk=best(sm,sg.d),sk=$('#smds').value==='best'?bk:$('#smds').value;
+ const ks=Object.keys(SER).filter(k=>inSeries(V,k)),sel=$('#ser').value;
+ let prim,sys,code;
+ if(mode==='dip'){prim=dip[n];sys=`Resistor colour code, ${n}-band`;code=prim&&prim.join(' ')}
+ else{const k=mode==='smd'?sk:bk;prim=k?sm[k]:null;sys=k?SMDN[k]+(mode==='auto'?' (best match)':''):'None';code=prim}
+ cur={V,code,valText:pretty(V,6)};
+ let v='';
+ if(mode==='dip'||mode==='auto')v+=`<p class="cap">DIP, ${n}-band</p><div class="bench">${dipSVG(dip[n],$('#pw').value)}</div>`;
+ if(mode==='smd'||mode==='auto')v+=`<p class="cap">SMD${sk?', '+SMDN[sk]:''}</p><div class="bench">${smdSVG(mode==='smd'?sm[sk]:sm[bk],$('#pk').value)}</div>`;
+ v+='<p class="mu" style="font-size:12px;margin:4px 0 0">Dimensions are typical nominal values (approximate; they vary by manufacturer). The drawing is not to scale. Power rating and package size are independent selections.</p>';
+ $('#vis').innerHTML=v;
+ const t=TOL[tol],kv=(a,b)=>`<dt>${a}</dt><dd>${b}</dd>`;
+ $('#info').innerHTML=`<dl class="kv">${kv('Resistance',pretty(V,6))}${kv('In ohms',plain(V))}${kv('Coding system',sys)}
+ ${kv(mode==='dip'?'Bands':'Marking',prim?(mode==='dip'?prim.map(dot).join(' '):prim):'<span class="no">NONE</span>')}
+ ${kv('Tolerance',tolTxt(t))}${kv('Minimum',pretty(V*BigInt(10000-t),10))}${kv('Maximum',pretty(V*BigInt(10000+t),10))}
+ ${kv('Preferred series',ks.length?ks.join(', '):'<span class="no">NONE</span>')}
+ ${kv(sel+' exact value',inSeries(V,sel)?'<span class="ok">YES</span>':'<span class="no">NONE</span>')}
+ ${kv('Status',prim?'<span class="ok">VALID</span>':'<span class="no">NONE</span>')}</dl>`;
+ const bd=k=>(mode==='auto'?k===bk:mode==='smd'&&k===sk)?'<span class="best">'+(mode==='auto'?'best':'shown')+'</span>':'';
+ let rows=[4,5,6].map(b=>`<tr class="${mode==='dip'&&b===n?'hl':''}"><td>DIP ${b}-band</td><td>${dip[b]?dip[b].slice(0,b===6?b:b).map(dot).join(' '):'NONE'}</td><td>${dip[b]?cpb(dip[b].join(' ')):''}</td></tr>`);
+ for(const k in SMDN)rows.push(`<tr class="${(mode==='auto'&&k===bk)||(mode==='smd'&&k===sk)?'hl':''}"><td>SMD ${SMDN[k]}${bd(k)}</td><td class="${sm[k]?'':'no'}" style="font-family:ui-monospace,monospace">${sm[k]||'NONE'}</td><td>${cpb(sm[k])}</td></tr>`);
+ rows.push(`<tr><td>E-series (exact)</td><td colspan="2">${Object.keys(SER).map(k=>`<span class="pill ${ks.includes(k)?'y':''} ${k===sel?'s':''}">${k} ${ks.includes(k)?'✓':'NONE'}</span>`).join('')}</td></tr>`);
+ $('#mat').innerHTML=`<table><tr><th>System</th><th>Code</th><th></th></tr>${rows.join('')}</table>`}
+
+function setMode(m){mode=m;document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));render()}
+function copy(t){if(!t)return;try{navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove()}}
+function useVal(V){$('#unit').value='1';$('#val').value=pretty(V,6).replace(' ','');render()}
+function results(el,list){el.innerHTML=list.length?list.map(([l,V,x])=>`<div>${l}: <b>${pretty(V,6)}</b>${x?' <span class="mu">'+x+'</span>':''} <button class="sm" data-use="${V}">Use value</button></div>`).join(''):'<span class="no">NONE</span>'}
+
+/* ---------- self-tests ---------- */
+function tests(){const T=[],t=(n,c)=>T.push([n,!!c]),v=s=>parseIn(s,1).V;
+ const tb=(tab,enc,dc,name)=>{for(const k in tab){t(name+' enc '+k,enc(v(k))===tab[k]);t(name+' dec '+tab[k],dc(tab[k])===v(k))}};
+ tb({'10':'100','22':'220','47':'470','100':'101','220':'221','470':'471','1k':'102','2.2k':'222','4.7k':'472','10k':'103','100k':'104','1M':'105'},encS3,dS3,'3d');
+ tb({'10':'10R0','22':'22R0','100':'1000','1k':'1001','2.2k':'2201','10k':'1002','100k':'1003'},encS4,dS4,'4d');
+ tb({'0.1':'R100','0.22':'R220','0.47':'R470','1':'1R0','2.2':'2R2','3.3':'3R3','4.7':'4R7','22':'22R0'},encR,dR,'R');
+ tb({'1k':'01B','10k':'01C','49.9k':'68C','100':'01A'},encE,dE,'EIA');
+ const ALL='0.1 0.22 0.47 1 2.2 4.7 10 22 47 100 220 470 1k 2.2k 4.7k 10k 22k 47k 100k 220k 470k 1M 2.2M 4.7M 10M'.split(' ');
+ for(const s of ALL){const V=v(s);for(const k in ENC){const c=ENC[k](V);t(`round-trip ${k} ${s}`,c===null||DEC[k](c)===V)}
+  for(const n of[4,5,6]){const b=dipBands(V,n,'gold','brown');t(`dip ${n} ${s}`,!b||dDIP(b).V===V)}
+  t('E24 '+s,inSeries(V,'E24'))}
+ const eq=(a,b)=>a.join()===b.join();
+ t('2.2k dip',eq(dipBands(v('2.2k'),4,'gold'),['red','red','red','gold']));
+ t('4.7k dip',eq(dipBands(v('4.7k'),4,'gold'),['yellow','violet','red','gold']));
+ t('0.1 dip',eq(dipBands(v('0.1'),4,'gold'),['brown','black','silver','gold']));
+ t('1 dip',eq(dipBands(v('1'),4,'gold'),['brown','black','gold','gold']));
+ t('10k 5-band',eq(dipBands(v('10k'),5,'brown'),['brown','black','black','red','brown']));
+ t('6-band tc',dipBands(v('1k'),6,'brown','red').length===6);
+ t('none 2.2 3d',encS3(v('2.2'))===null);t('none 2.2k EIA',encE(v('2.2k'))===null);t('none 100 R',encR(v('100'))===null);
+ t('none 1.234k dip4',dipBands(v('1.234k'),4,'gold')===null);t('none 2.2k 3d x',encS3(v('0.5'))===null);
+ t('E96 len',E96.length===96);t('E192 len',SER.E192.length===192);t('E48 len',SER.E48.length===48);t('E24 len',SER.E24.length===24);t('E12',SER.E12.length===12);t('E6',SER.E6.length===6);
+ t('E96 sorted',E96.every((x,i)=>!i||+x>+E96[i-1]));t('E192 sorted',SER.E192.every((x,i)=>!i||+x>+SER.E192[i-1]));
+ t('E6⊂E12⊂E24',SER.E6.every(x=>SER.E12.includes(x))&&SER.E12.every(x=>SER.E24.includes(x)));
+ t('E48⊂E96⊂E192',SER.E48.every(x=>E96.includes(x))&&E96.every(x=>SER.E192.includes(x)));
+ t('2.2k in E24 not E48',inSeries(v('2.2k'),'E24')&&!inSeries(v('2.2k'),'E48'));t('4.99k E96',inSeries(v('4.99k'),'E96'));
+ t('parse 4k7',v('4k7')===4700000000n);t('parse 2.2kΩ',v('2.2kΩ')===2200000000n);t('parse 4R7',v('4R7')===4700000n);t('parse 4.7MΩ',v('4.7MΩ')===4700000000000n);
+ t('parse bad',!!parseIn('abc',1).err);t('parse zero',!!parseIn('0',1).err);t('parse 7 decimals',!!parseIn('1.2345678',1).err);t('parse mixed',!!parseIn('2.2k2',1).err);
+ t('unit select',parseIn('2.2',1000).V===2200000000n);
+ t('pretty',pretty(2200000000n,6)==='2.2 kΩ'&&pretty(100000n,6)==='0.1 Ω');
+ return T}
+function showTests(){const T=tests(),f=T.filter(x=>!x[1]);$('#tests').textContent=`Self-tests: ${T.length-f.length}/${T.length} passed`+(f.length?' — failed: '+f.map(x=>x[0]).join(', '):'.')}
+
+/* ---------- wiring ---------- */
+$('#tol').innerHTML=Object.keys(TOL).map(c=>`<option value="${c}"${c==='gold'?' selected':''}>${c} ${tolTxt(TOL[c])}</option>`).join('');
+$('#tc').innerHTML=Object.keys(TC).map(c=>`<option value="${c}"${c==='brown'?' selected':''}>${c} ${TC[c]} ppm/K</option>`).join('');
+$('#pw').innerHTML=Object.keys(PW).map(k=>`<option${k==='1/4 W'?' selected':''}>${k}</option>`).join('');
+$('#pk').innerHTML=Object.keys(PK).map(k=>`<option${k==='0603'?' selected':''}>${k}</option>`).join('');
+$('#ser').innerHTML=Object.keys(SER).map(k=>`<option${k==='E24'?' selected':''}>${k}</option>`).join('');
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+['#val','#unit','#bands','#tol','#tc','#smds','#ser','#pw','#pk'].forEach(s=>$(s).addEventListener('input',()=>{if(s==='#bands')$('#tc').disabled=$('#bands').value!=='6';render()}));
+$('#tc').disabled=true;
+$('#reset').onclick=()=>{$('#val').value='';$('#unit').value='1';$('#err').textContent='';render();$('#val').focus()};
+$('#cpv').onclick=()=>cur&&copy(cur.valText);$('#cpc').onclick=()=>cur&&copy(cur.code);
+$('#swap').onclick=()=>setMode(mode==='dip'?'smd':'dip');
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.cp)copy(b.dataset.cp);if(b.dataset.use)useVal(BigInt(b.dataset.use))});
+$('#dd1').onclick=()=>{const a=$('#dcol').value.trim().split(/[\s,;\-–]+/).filter(Boolean),d=dDIP(a);
+ if(d.err)$('#r1').innerHTML=`<span style="color:var(--er)">${d.err}</span>`;else results($('#r1'),[[a.length+'-band',d.V,tolTxt(d.tol)+(d.tc?' · '+d.tc+' ppm/K':'')]])};
+$('#dd2').onclick=()=>{const s=$('#dsm').value.trim(),l=[];for(const k in DEC){const V=DEC[k](s);if(V)l.push([SMDN[k],V])}results($('#r2'),l)};
+['#dcol','#dsm'].forEach((s,i)=>$(s).addEventListener('keydown',e=>{if(e.key==='Enter')$(i?'#dd2':'#dd1').click()}));
+$('#ct').innerHTML='<tr><th>Colour</th><th>Digit</th><th>Multiplier</th><th>Tolerance</th><th>Temp. coeff.</th></tr>'+N.map((c,i)=>`<tr><td>${dot(c)}</td><td>${i<10?i:'–'}</td><td>${ML[i]}</td><td>${TOL[c]?tolTxt(TOL[c]):'–'}</td><td>${TC[c]?TC[c]+' ppm/K':'–'}</td></tr>`).join('');
+$('#et').innerHTML=E96.map((x,i)=>`<span>${String(i+1).padStart(2,'0')} → ${x}</span>`).join('');
+$('#theme').onclick=()=>{const d=document.documentElement,n=d.dataset.theme==='dark'?'light':'dark';d.dataset.theme=n;try{localStorage.setItem('rb-theme',n)}catch(e){}};
+try{const s=localStorage.getItem('rb-theme');if(s)document.documentElement.dataset.theme=s}catch(e){}
+$('#val').value='2.2k';render();showTests();
+</script></body></html>
