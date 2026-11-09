@@ -25,7 +25,7 @@ button{cursor:pointer}button:hover{border-color:var(--ac)}
 .err{color:var(--er);min-height:22px;font-size:13px;margin:6px 0}
 .main{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;margin-top:10px}
 @media(max-width:800px){.main{grid-template-columns:1fr}#val{width:100%}}
-.bench{background:repeating-linear-gradient(0deg,transparent 0 23px,rgba(127,150,170,.08) 23px 24px),repeating-linear-gradient(90deg,transparent 0 23px,rgba(127,150,170,.08) 23px 24px),var(--in);border:1px solid var(--ln);border-radius:6px;padding:8px;margin-bottom:8px}
+.bench{background:var(--in);border:1px solid var(--ln);border-radius:6px;padding:8px;margin-bottom:8px}
 .bench svg{width:100%;height:auto;display:block}.cap{font-size:12px;color:var(--mu);margin:0 0 4px}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0}
 .kv dt{color:var(--mu)}.kv dd{margin:0;font-family:ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
@@ -42,6 +42,7 @@ th{color:var(--mu);font-weight:500}tr.hl td{background:rgba(76,201,192,.14)}
 @media(max-width:800px){.two{grid-template-columns:1fr}}
 details{margin-top:14px}summary{cursor:pointer;font-weight:600}
 .eia{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:2px 10px;font:12px ui-monospace,monospace;margin-top:8px}
+.slot .bench{max-width:520px;margin:0 auto 8px}.cap{min-height:18px}
 footer{margin:18px 0 6px;font-size:13px;color:var(--mu)}
 .sm{min-height:30px;padding:2px 8px;font-size:12px}
 </style></head><body><div class="w">
@@ -169,25 +170,22 @@ const TXT='font-size="12" fill="currentColor" font-family="ui-monospace,Menlo,Co
 const dimH=(a,b,y,t,y0,ly)=>`<g stroke="currentColor" stroke-width="1"><path d="M${a} ${y0}V${y+(y0>y?-5:5)}M${b} ${y0}V${y+(y0>y?-5:5)}" opacity=".6"/><path d="M${a} ${y}H${b}" marker-start="url(#ar)" marker-end="url(#ar)"/></g><text x="${(a+b)/2}" y="${ly}" text-anchor="middle" ${TXT}>${t}</text>`;
 const dimV=(x,a,b,t,x0,ty)=>`<g stroke="currentColor" stroke-width="1"><path d="M${x0} ${a}H${x+5}M${x0} ${b}H${x+5}" opacity=".6"/><path d="M${x} ${a}V${b}" marker-start="url(#ar)" marker-end="url(#ar)"/></g><text x="${x+10}" y="${ty}" ${TXT}>${t}</text>`;
 const ARW='<marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 0L8 4L0 8z" fill="currentColor"/></marker>';
-const BODY='M150 36C130 36 122 50 122 70S130 104 150 104L175 98H345L370 104C390 104 398 90 398 70S390 36 370 36L345 42H175Z';
-function dipSVG(b,w){let g='';const d=PW[w];
- if(b){const v=b.length===4?3:4,xs=[...Array(v)].map((_,i)=>158+i*30);xs.push(b.length===6?318:336);if(b.length===6)xs.push(356);
-  g=b.map((c,i)=>`<rect x="${xs[i]}" y="26" width="17" height="88" fill="${H[N.indexOf(c)]}"/>`).join('')}
- return`<svg viewBox="0 0 520 170" style="color:var(--mu)" role="img" aria-label="Axial resistor ${b?b.join(' '):'without bands'}"><defs>${ARW}
-<linearGradient id="ld" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef0f2"/><stop offset=".5" stop-color="#9aa1a9"/><stop offset="1" stop-color="#555b62"/></linearGradient>
-<linearGradient id="sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".25" stop-color="#fff" stop-opacity=".1"/><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></linearGradient>
-<clipPath id="bd"><path d="${BODY}"/></clipPath></defs>
-<ellipse cx="260" cy="124" rx="150" ry="6" fill="#000" opacity=".25"/>
-<rect x="6" y="66" width="140" height="8" rx="3" fill="url(#ld)"/><rect x="374" y="66" width="140" height="8" rx="3" fill="url(#ld)"/>
-<path d="${BODY}" fill="#d6bd8a"/><g clip-path="url(#bd)">${g}</g><path d="${BODY}" fill="url(#sh)"/>${d?dimH(122,398,140,'',108,156).replace('></text>','>L '+mm(d[0])+'</text>')+dimV(410,36,104,'',372,58).replace('></text>','>D '+mm(d[1])+'</text>'):''}</svg>`}
-function smdSVG(t,k){const d=PK[k],fs=t&&t.length>3?38:46;
- return`<svg viewBox="0 0 420 170" style="color:var(--mu)" role="img" aria-label="SMD resistor marked ${t||'blank'}"><defs>${ARW}
-<linearGradient id="tm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1f2f4"/><stop offset=".5" stop-color="#b5bac1"/><stop offset="1" stop-color="#7a8088"/></linearGradient>
-<linearGradient id="bs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient></defs>
-<ellipse cx="180" cy="140" rx="135" ry="7" fill="#000" opacity=".3"/>
-<rect x="62" y="40" width="236" height="90" rx="4" fill="#17191c"/><rect x="62" y="40" width="236" height="90" rx="4" fill="url(#bs)"/>
-<rect x="62" y="40" width="46" height="90" rx="4" fill="url(#tm)"/><rect x="252" y="40" width="46" height="90" rx="4" fill="url(#tm)"/>
-<text x="180" y="${85+fs*.35}" text-anchor="middle" font-family="ui-monospace,Menlo,Consolas,monospace" font-weight="700" font-size="${fs}" fill="#e8e8e6" letter-spacing="3">${t||''}</text>${d?dimH(62,298,30,'',38,20).replace('></text>','>L '+mm(d[0])+'</text>')+dimV(330,40,130,'',298,89).replace('></text>','>W '+mm(d[1])+'</text>'):''}</svg>`}
+/* Fixed geometry: both drawings use the same 520x200 canvas and the same centre (260,100). Only labels change with the selection. */
+function dipSVG(b,w){const d=PW[w],[L,D]=d||[0,0],cx=260,cy=100,x0=140,x1=380,y0=65,y1=135,lp=240,dp=70;let g='';
+ if(b){const f=[...Array(b.length===4?3:4)].map((_,i)=>.1+i*.12);f.push(b.length===6?.7:.8);if(b.length===6)f.push(.84);
+  g=b.map((c,i)=>`<rect x="${x0+lp*f[i]}" y="${y0}" width="17" height="${dp}" fill="${H[N.indexOf(c)]}" stroke="rgba(0,0,0,.4)" stroke-width=".5"/>`).join('')}
+ return`<svg viewBox="0 0 520 200" style="color:var(--mu)" role="img" aria-label="Axial resistor ${b?b.join(' '):'without bands'}"><defs>${ARW}</defs>
+<rect x="${x0}" y="${y0}" width="${lp}" height="${dp}" rx="6" fill="#d6bd8a"/>${g}<rect x="${x0}" y="${y0}" width="${lp}" height="${dp}" rx="6" fill="none" stroke="rgba(0,0,0,.55)"/>
+${d?dimH(x0,x1,172,'L '+mm(L),y1+4,190)+dimV(x1+26,y0,y1,'D '+mm(D),x1,cy-8):''}</svg>`}
+function smdSVG(t,k){const d=PK[k],[L,W]=d||[0,0],cx=260,cy=100,x0=140,x1=380,y0=50,y1=150,lp=240,wp=100,tw=40,n=(t||'').length,fs=Math.min(44,(lp-2*tw)/(Math.max(n,3)*.7));
+ const tm='fill="#b9bfc7" stroke="rgba(0,0,0,.5)" stroke-width=".8"';
+ return`<svg viewBox="0 0 520 200" style="color:var(--mu)" role="img" aria-label="SMD resistor marked ${t||'blank'}"><defs>${ARW}</defs>
+<rect x="${x0}" y="${y0}" width="${lp}" height="${wp}" fill="#20242a"/><rect x="${x0}" y="${y0}" width="${tw}" height="${wp}" ${tm}/><rect x="${x1-tw}" y="${y0}" width="${tw}" height="${wp}" ${tm}/>
+<rect x="${x0}" y="${y0}" width="${lp}" height="${wp}" fill="none" stroke="rgba(0,0,0,.6)"/>
+${n?`<text x="${cx}" y="${cy+fs*.35}" text-anchor="middle" font-family="ui-monospace,Menlo,Consolas,monospace" font-weight="700" font-size="${fs}" fill="#eceff1">${t}</text>`:''}
+${d?dimH(x0,x1,172,'L '+mm(L),y1+4,190)+dimV(x1+30,y0,y1,'W '+mm(W),x1,cy+4):''}</svg>`}
+const slot=(c,sv,h)=>`<div class="slot"${h?' style="visibility:hidden" aria-hidden="true"':''}><p class="cap">${c}</p><div class="bench">${sv}</div></div>`;
+const visHTML=(a,ca,b,cb)=>slot(ca,a)+(b?slot(cb,b):slot('&nbsp;',dipSVG(null),1));
 
 /* ---------- UI ---------- */
 let mode='auto',cur=null;
@@ -197,7 +195,7 @@ const tolTxt=t=>'±'+t/100+'%';
 function render(){
  const r=parseIn($('#val').value,+$('#unit').value);
  if(r.err){$('#err').textContent=$('#val').value.trim()?r.err:'';cur=null;
-  $('#vis').innerHTML=mode!=='smd'?`<div class="bench">${dipSVG(null)}</div>`:`<div class="bench">${smdSVG('')}</div>`;
+  $('#vis').innerHTML=mode==='auto'?visHTML(dipSVG(null),'DIP',smdSVG(''),'SMD'):mode==='dip'?visHTML(dipSVG(null),'DIP'):visHTML(smdSVG(''),'SMD');
   $('#info').innerHTML='<p class="mu">Enter a value such as 2.2k, 4R7 or 470 to see its codes.</p>';$('#mat').innerHTML='';return}
  $('#err').textContent='';
  const V=r.V,n=+$('#bands').value,tol=$('#tol').value,tc=$('#tc').value,sg=sig(V);
@@ -210,9 +208,11 @@ function render(){
  else{const k=mode==='smd'?sk:bk;prim=k?sm[k]:null;sys=k?SMDN[k]+(mode==='auto'?' (best match)':''):'None';code=prim}
  cur={V,code,valText:pretty(V,6)};
  let v='';
- if(mode==='dip'||mode==='auto')v+=`<p class="cap">DIP, ${n}-band</p><div class="bench">${dipSVG(dip[n],$('#pw').value)}</div>`;
- if(mode==='smd'||mode==='auto')v+=`<p class="cap">SMD${sk?', '+SMDN[sk]:''}</p><div class="bench">${smdSVG(mode==='smd'?sm[sk]:sm[bk],$('#pk').value)}</div>`;
- v+='<p class="mu" style="font-size:12px;margin:4px 0 0">Dimensions are typical nominal values (approximate; they vary by manufacturer). The drawing is not to scale. Power rating and package size are independent selections.</p>';
+ const pw=$('#pw').value,pk=$('#pk').value,cd=`DIP, ${n}-band`;
+ if(mode==='dip')v=visHTML(dipSVG(dip[n],pw),cd);
+ else if(mode==='smd')v=visHTML(smdSVG(sm[sk],pk),`SMD${sk?', '+SMDN[sk]:''}`);
+ else v=visHTML(dipSVG(dip[n],pw),cd,smdSVG(sm[bk],pk),`SMD${bk?', '+SMDN[bk]:''}`);
+ v+='<p class="mu" style="font-size:12px;margin:4px 0 0">Dimensions are typical nominal values (approximate; they vary by manufacturer). The drawings have a fixed size and position; only the dimension values change. Power rating and package size are independent selections.</p>';
  $('#vis').innerHTML=v;
  const t=TOL[tol],kv=(a,b)=>`<dt>${a}</dt><dd>${b}</dd>`;
  $('#info').innerHTML=`<dl class="kv">${kv('Resistance',pretty(V,6))}${kv('In ohms',plain(V))}${kv('Coding system',sys)}
